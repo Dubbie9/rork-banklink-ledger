@@ -1,4 +1,4 @@
-import { publicProcedure } from '../../create-context';
+import { publicProcedure } from '../../../create-context';
 // import { kv } from '@vercel/kv';
 // Using in-memory storage for now
 const kv = {

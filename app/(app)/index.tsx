@@ -63,7 +63,10 @@ export default function HomeScreen() {
 
   const getGreeting = () => {
     const hour = new Date().getHours();
-    const firstName = user?.firstName || user?.displayName?.split(' ')[0] || 'there';
+    // Extract first name from user data, prioritizing firstName field
+    const firstName = user?.firstName || 
+                     (user?.displayName ? user.displayName.split(' ')[0] : null) ||
+                     (user?.email ? user.email.split('@')[0] : 'there');
     
     if (hour < 12) return `Good morning, ${firstName}`;
     if (hour < 17) return `Good afternoon, ${firstName}`;
@@ -71,7 +74,11 @@ export default function HomeScreen() {
   };
 
   const getWelcomeMessage = () => {
-    const firstName = user?.firstName || user?.displayName?.split(' ')[0];
+    // Extract first name from user data, prioritizing firstName field
+    const firstName = user?.firstName || 
+                     (user?.displayName ? user.displayName.split(' ')[0] : null) ||
+                     (user?.email ? user.email.split('@')[0] : null);
+    
     if (firstName) {
       return `Welcome back, ${firstName}`;
     }

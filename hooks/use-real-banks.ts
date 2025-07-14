@@ -14,11 +14,16 @@ export function useRealBanks() {
     setError(null);
     
     try {
+      console.log("Fetching banks - getting access token...");
       const accessToken = await getValidAccessToken();
+      console.log("Access token obtained, fetching institutions...");
+      
       const institutions = await trpcClient.gocardless.institutions.list.query({
         accessToken,
         country: "gb",
       });
+      
+      console.log(`Fetched ${institutions.length} institutions`);
       
       // Transform institutions to Bank format
       const transformedBanks: Bank[] = institutions.map((institution: any) => ({

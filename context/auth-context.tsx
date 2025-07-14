@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useFirebaseAuth } from "@/hooks/use-firebase-auth";
+import { useGoCardlessStore } from "@/hooks/use-gocardless";
 
 type AuthContextType = {
   pin: string;
@@ -54,6 +55,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const handleLogout = async () => {
     setAuthenticated(false);
+    
+    // Clear GoCardless tokens on logout
+    const { clearTokens } = useGoCardlessStore.getState();
+    clearTokens();
     
     // Also logout from Firebase if user is logged in
     if (user) {

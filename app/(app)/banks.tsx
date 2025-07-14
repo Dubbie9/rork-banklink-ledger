@@ -3,6 +3,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useTheme } from "@/context/theme-context";
 import { useRealBanks } from "@/hooks/use-real-banks";
 import { useBankConnection } from "@/hooks/use-bank-connection";
+import { useGoCardless } from "@/hooks/use-gocardless";
 import { Bank } from "@/types";
 import { Plus, RefreshCw, Trash2, ChevronRight, Search, X } from "lucide-react-native";
 import { useRouter } from "expo-router";
@@ -30,6 +31,7 @@ export default function BanksScreen() {
   const { colors } = useTheme();
   const { banks: availableBanks, loading: banksLoading, error: banksError, refetch } = useRealBanks();
   const { disconnectBank } = useBankConnection();
+  const { forceReauthenticate } = useGoCardless();
   const router = useRouter();
   const { user } = useFirebaseAuth();
   const [searchQuery, setSearchQuery] = useState("");
@@ -217,15 +219,37 @@ export default function BanksScreen() {
           <Text style={[styles.errorText, { color: colors.error }]}>
             Failed to load available banks
           </Text>
-          <Pressable
-            style={({ pressed }) => [
-              styles.retryButton,
-              { backgroundColor: colors.primary, opacity: pressed ? 0.9 : 1 }
-            ]}
-            onPress={refetch}
-          >
-            <Text style={styles.retryButtonText}>Retry</Text>
-          </Pressable>
+          <Text style={[styles.errorSubtext, { color: colors.textSecondary }]}>
+            {banksError}
+          </Text>
+          <View style={styles.errorButtons}>
+            <Pressable
+              style={({ pressed }) => [
+                styles.retryButton,
+                { backgroundColor: colors.primary, opacity: pressed ? 0.9 : 1 }
+              ]}
+              onPress={refetch}
+            >
+              <Text style={styles.retryButtonText}>Retry</Text>
+            </Pressable>
+            <Pressable
+              style={({ pressed }) => [
+                styles.retryButton,
+                styles.secondaryButton,
+                { borderColor: colors.primary, opacity: pressed ? 0.9 : 1 }
+              ]}
+              onPress={async () => {
+                try {
+                  await forceReauthenticate();
+                  refetch();
+                } catch (error) {
+                  Alert.alert("Error", "Failed to re-authenticate. Please try again.");
+                }
+              }}
+            >
+              <Text style={[styles.retryButtonText, { color: colors.primary }]}>Re-authenticate</Text>
+            </Pressable>
+          </View>
         </View>
       </SafeAreaView>
     );
@@ -238,6 +262,14 @@ export default function BanksScreen() {
         <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
           Manage your connected bank accounts
         </Text>
+        
+        {banksError && (
+          <View style={[styles.statusBanner, { backgroundColor: colors.errorLight }]}>
+            <Text style={[styles.statusText, { color: colors.error }]}>
+              ⚠️ Connection issue: {banksError.includes('No refresh token') ? 'Authentication required' : 'Service unavailable'}
+            </Text>
+          </View>
+        )}
         
         {/* Search Bar */}
         <View style={[styles.searchContainer, { backgroundColor: colors.backgroundAccent, borderColor: colors.border }]}>
@@ -442,8 +474,18 @@ const styles = StyleSheet.create({
   },
   errorText: {
     fontSize: 16,
+    fontWeight: "600",
+    textAlign: "center",
+    marginBottom: 8,
+  },
+  errorSubtext: {
+    fontSize: 14,
     textAlign: "center",
     marginBottom: 24,
+  },
+  errorButtons: {
+    flexDirection: "row",
+    gap: 12,
   },
   retryButton: {
     height: 56,
@@ -451,6 +493,11 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     paddingHorizontal: 32,
+    flex: 1,
+  },
+  secondaryButton: {
+    backgroundColor: "transparent",
+    borderWidth: 1,
   },
   retryButtonText: {
     fontSize: 16,
@@ -495,6 +542,16 @@ const styles = StyleSheet.create({
   },
   noResultsSubtext: {
     fontSize: 14,
+    textAlign: "center",
+  },
+  statusBanner: {
+    marginTop: 12,
+    padding: 12,
+    borderRadius: 8,
+  },
+  statusText: {
+    fontSize: 14,
+    fontWeight: "500",
     textAlign: "center",
   },
 });

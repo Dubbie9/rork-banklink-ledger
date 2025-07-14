@@ -8,6 +8,13 @@ export const getAccessTokenProcedure = publicProcedure
     const secretId = process.env.GOCARDLESS_SECRET_ID;
     const secretKey = process.env.GOCARDLESS_SECRET_KEY;
 
+    console.log('GoCardless auth attempt:', {
+      hasSecretId: !!secretId,
+      hasSecretKey: !!secretKey,
+      secretIdLength: secretId?.length || 0,
+      secretKeyLength: secretKey?.length || 0
+    });
+
     if (!secretId || !secretKey) {
       throw new Error("GoCardless credentials not configured");
     }
@@ -25,11 +32,17 @@ export const getAccessTokenProcedure = publicProcedure
         }),
       });
 
+      console.log('GoCardless auth response status:', response.status);
+
       if (!response.ok) {
-        throw new Error(`Failed to get access token: ${response.statusText}`);
+        const errorText = await response.text();
+        console.error('GoCardless auth error response:', errorText);
+        throw new Error(`Failed to get access token: ${response.statusText} - ${errorText}`);
       }
 
       const data = await response.json();
+      console.log('GoCardless auth success, token expires at:', new Date(data.access_expires * 1000));
+      
       return {
         access: data.access,
         refresh: data.refresh,

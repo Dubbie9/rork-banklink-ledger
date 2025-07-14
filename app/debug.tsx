@@ -47,6 +47,34 @@ export default function DebugScreen() {
     }
   };
 
+  const testBanksFetch = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      // First get access token
+      const authResult = await trpcClient.gocardless.auth.getAccessToken.mutate();
+      console.log('Auth successful:', authResult);
+      
+      // Then fetch institutions
+      const banksResult = await trpcClient.gocardless.institutions.list.query({
+        accessToken: authResult.access,
+        country: 'gb'
+      });
+      
+      setDebugInfo({ 
+        type: 'banks', 
+        data: { 
+          auth: authResult, 
+          banks: banksResult.slice(0, 5) // Show first 5 banks only
+        } 
+      });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Unknown error');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView style={styles.content}>
@@ -62,6 +90,10 @@ export default function DebugScreen() {
 
         <TouchableOpacity style={styles.button} onPress={testGoCardlessAuth}>
           <Text style={styles.buttonText}>Test GoCardless Auth</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity style={styles.button} onPress={testBanksFetch}>
+          <Text style={styles.buttonText}>Test Banks Fetch (Full Flow)</Text>
         </TouchableOpacity>
 
         {loading && <Text style={styles.loading}>Loading...</Text>}

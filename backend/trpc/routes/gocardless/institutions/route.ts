@@ -10,6 +10,8 @@ export const getInstitutionsProcedure = publicProcedure
   }))
   .query(async ({ input }) => {
     try {
+      console.log(`Fetching institutions for country: ${input.country}`);
+      
       const response = await fetch(
         `${GOCARDLESS_BASE_URL}/institutions/?country=${input.country}`,
         {
@@ -20,11 +22,21 @@ export const getInstitutionsProcedure = publicProcedure
         }
       );
 
+      console.log('Institutions response status:', response.status);
+
       if (!response.ok) {
-        throw new Error(`Failed to fetch institutions: ${response.statusText}`);
+        const errorText = await response.text();
+        console.error('Institutions error response:', errorText);
+        throw new Error(`Failed to fetch institutions: ${response.statusText} - ${errorText}`);
       }
 
       const data = await response.json();
+      console.log(`Fetched ${data.length} institutions`);
+      
+      if (!Array.isArray(data)) {
+        console.error('Unexpected institutions response format:', data);
+        throw new Error('Invalid response format from GoCardless');
+      }
       
       // Transform to match our existing Bank interface
       const institutions = data.map((institution: any) => ({

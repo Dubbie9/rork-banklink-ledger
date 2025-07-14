@@ -75,11 +75,16 @@ export function useFirebaseAuth() {
         throw new Error("Invalid email or password");
       }
       
-      // Create mock user
+      // Create mock user with firstName extracted from email
+      const emailName = email.split("@")[0];
+      const firstName = emailName.charAt(0).toUpperCase() + emailName.slice(1);
+      
       const user: User = {
         uid: uuidv4(),
         email,
-        displayName: email.split("@")[0],
+        displayName: firstName,
+        firstName,
+        provider: 'email',
       };
       
       // Save to storage

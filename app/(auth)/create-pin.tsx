@@ -1,12 +1,13 @@
 import { useState, useRef, useEffect } from "react";
-import { View, Text, StyleSheet, Pressable, Animated } from "react-native";
+import { View, Text, StyleSheet, Pressable, Animated, Alert } from "react-native";
 import { useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useAuth } from "@/context/auth-context";
 import { useTheme } from "@/context/theme-context";
-import { ShieldCheck } from "lucide-react-native";
+import { ShieldCheck, Fingerprint } from "lucide-react-native";
 import * as Haptics from "expo-haptics";
 import { Platform } from "react-native";
+import { useBiometricAuth } from "@/hooks/use-biometric-auth";
 
 export default function CreatePin() {
   const [pin, setPin] = useState("");
@@ -16,6 +17,8 @@ export default function CreatePin() {
   const { setPin: savePin } = useAuth();
   const router = useRouter();
   const { colors } = useTheme();
+  const { isSupported, biometricType, enableBiometric } = useBiometricAuth();
+  const [showBiometricPrompt, setShowBiometricPrompt] = useState(false);
   
   const shakeAnimation = useRef(new Animated.Value(0)).current;
 
@@ -66,14 +69,55 @@ export default function CreatePin() {
     if (confirmPin.length === 4) {
       if (pin === confirmPin) {
         savePin(pin);
-        router.replace("/(app)");
+        // Show biometric setup option if supported
+        if (isSupported) {
+          setShowBiometricPrompt(true);
+        } else {
+          router.replace("/(app)");
+        }
       } else {
         setError("PINs don't match. Try again.");
         setConfirmPin("");
         shakeError();
       }
     }
-  }, [confirmPin]);
+  }, [confirmPin, isSupported]);
+
+  const handleBiometricSetup = () => {
+    Alert.alert(
+      `Enable ${biometricType}?`,
+      `Use ${biometricType} to quickly unlock your app instead of entering your PIN every time.`,
+      [
+        {
+          text: "Skip",
+          style: "cancel",
+          onPress: () => router.replace("/(app)")
+        },
+        {
+          text: `Enable ${biometricType}`,
+          onPress: async () => {
+            const success = await enableBiometric();
+            if (success) {
+              Alert.alert(
+                "Success!",
+                `${biometricType} has been enabled for your account.`,
+                [{ text: "OK", onPress: () => router.replace("/(app)") }]
+              );
+            } else {
+              router.replace("/(app)");
+            }
+          }
+        }
+      ]
+    );
+  };
+
+  useEffect(() => {
+    if (showBiometricPrompt) {
+      handleBiometricSetup();
+      setShowBiometricPrompt(false);
+    }
+  }, [showBiometricPrompt]);
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={["top", "bottom"]}>
@@ -118,6 +162,15 @@ export default function CreatePin() {
         <Text style={[styles.errorText, { color: colors.error }]}>{error}</Text>
       ) : (
         <View style={styles.spacer} />
+      )}
+
+      {isSupported && step === 2 && confirmPin.length === 0 && (
+        <View style={styles.biometricHint}>
+          <Fingerprint size={20} color={colors.primary} />
+          <Text style={[styles.biometricHintText, { color: colors.textSecondary }]}>
+            {biometricType} will be available after PIN setup
+          </Text>
+        </View>
       )}
 
       <View style={styles.keypadContainer}>
@@ -227,5 +280,17 @@ const styles = StyleSheet.create({
   keypadButtonText: {
     fontSize: 28,
     fontWeight: "500",
+  },
+  biometricHint: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 16,
+    paddingHorizontal: 20,
+  },
+  biometricHintText: {
+    fontSize: 14,
+    marginLeft: 8,
+    textAlign: "center",
   },
 });

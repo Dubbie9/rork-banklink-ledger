@@ -1,15 +1,16 @@
-import { View, Text, StyleSheet, FlatList, Pressable, Alert, ScrollView } from "react-native";
+import { View, Text, StyleSheet, FlatList, Pressable, Alert, ScrollView, TextInput } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useTheme } from "@/context/theme-context";
 import { useRealBanks } from "@/hooks/use-real-banks";
 import { useBankConnection } from "@/hooks/use-bank-connection";
 import { Bank } from "@/types";
-import { Plus, RefreshCw, Trash2, ChevronRight } from "lucide-react-native";
+import { Plus, RefreshCw, Trash2, ChevronRight, Search, X } from "lucide-react-native";
 import { useRouter } from "expo-router";
 import * as Haptics from "expo-haptics";
 import { Platform } from "react-native";
 import { useFirebaseAuth } from "@/hooks/use-firebase-auth";
 import BankLogo from "@/components/BankLogo";
+import { useState } from "react";
 
 // Mock connected banks for now - in real implementation, this would come from your backend
 const mockConnectedBanks = [
@@ -31,6 +32,12 @@ export default function BanksScreen() {
   const { disconnectBank } = useBankConnection();
   const router = useRouter();
   const { user } = useFirebaseAuth();
+  const [searchQuery, setSearchQuery] = useState("");
+
+  // Filter banks based on search query
+  const filteredBanks = availableBanks.filter(bank =>
+    bank.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   const handleAddBank = (bank: Bank) => {
     // Authentication enforcement
@@ -231,6 +238,23 @@ export default function BanksScreen() {
         <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
           Manage your connected bank accounts
         </Text>
+        
+        {/* Search Bar */}
+        <View style={[styles.searchContainer, { backgroundColor: colors.backgroundAccent, borderColor: colors.border }]}>
+          <Search size={20} color={colors.textSecondary} style={styles.searchIcon} />
+          <TextInput
+            style={[styles.searchInput, { color: colors.text }]}
+            placeholder="Search for your bank…"
+            placeholderTextColor={colors.textSecondary}
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+          />
+          {searchQuery.length > 0 && (
+            <Pressable onPress={() => setSearchQuery("")} style={styles.clearButton}>
+              <X size={20} color={colors.textSecondary} />
+            </Pressable>
+          )}
+        </View>
       </View>
 
       <ScrollView 
@@ -260,9 +284,18 @@ export default function BanksScreen() {
               Loading available banks...
             </Text>
           </View>
+        ) : filteredBanks.length === 0 && searchQuery.length > 0 ? (
+          <View style={styles.noResultsContainer}>
+            <Text style={[styles.noResultsText, { color: colors.textSecondary }]}>
+              No banks found for "{searchQuery}"
+            </Text>
+            <Text style={[styles.noResultsSubtext, { color: colors.textSecondary }]}>
+              Try adjusting your search terms
+            </Text>
+          </View>
         ) : (
           <FlatList
-            data={availableBanks}
+            data={filteredBanks}
             renderItem={renderAvailableBank}
             keyExtractor={(item) => item.id}
             numColumns={2}
@@ -430,5 +463,38 @@ const styles = StyleSheet.create({
   },
   loadingText: {
     fontSize: 16,
+  },
+  searchContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    height: 48,
+    borderRadius: 12,
+    borderWidth: 1,
+    paddingHorizontal: 16,
+    marginTop: 16,
+  },
+  searchIcon: {
+    marginRight: 12,
+  },
+  searchInput: {
+    flex: 1,
+    fontSize: 16,
+  },
+  clearButton: {
+    padding: 4,
+  },
+  noResultsContainer: {
+    padding: 40,
+    alignItems: "center",
+  },
+  noResultsText: {
+    fontSize: 16,
+    fontWeight: "500",
+    marginBottom: 8,
+    textAlign: "center",
+  },
+  noResultsSubtext: {
+    fontSize: 14,
+    textAlign: "center",
   },
 });

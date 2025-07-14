@@ -11,6 +11,7 @@ import { useRouter } from "expo-router";
 import TransactionList from "@/components/TransactionList";
 import { LinearGradient } from "expo-linear-gradient";
 import { useEffect, useRef } from "react";
+import { useFirebaseAuth } from "@/hooks/use-firebase-auth";
 
 export default function HomeScreen() {
   const { colors } = useTheme();
@@ -18,6 +19,7 @@ export default function HomeScreen() {
   const { transactions } = useTransactions();
   const { counterparties } = useCounterparties();
   const router = useRouter();
+  const { user } = useFirebaseAuth();
   const [timeRange, setTimeRange] = useState<"7d" | "30d" | "90d">("30d");
   
   // Animation values
@@ -61,9 +63,19 @@ export default function HomeScreen() {
 
   const getGreeting = () => {
     const hour = new Date().getHours();
-    if (hour < 12) return "Good morning";
-    if (hour < 17) return "Good afternoon";
-    return "Good evening";
+    const firstName = user?.firstName || user?.displayName?.split(' ')[0] || 'there';
+    
+    if (hour < 12) return `Good morning, ${firstName}`;
+    if (hour < 17) return `Good afternoon, ${firstName}`;
+    return `Good evening, ${firstName}`;
+  };
+
+  const getWelcomeMessage = () => {
+    const firstName = user?.firstName || user?.displayName?.split(' ')[0];
+    if (firstName) {
+      return `Welcome back, ${firstName}`;
+    }
+    return "Welcome back";
   };
 
   return (

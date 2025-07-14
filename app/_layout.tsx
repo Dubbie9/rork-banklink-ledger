@@ -8,7 +8,7 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { ErrorBoundary } from "./error-boundary";
 import { AuthProvider } from "@/context/auth-context";
 import { StatusBar } from "expo-status-bar";
-import { ThemeProvider } from "@/context/theme-context";
+import { ThemeProvider, useTheme } from "@/context/theme-context";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { trpc, trpcClient } from "@/lib/trpc";
 
@@ -50,7 +50,6 @@ export default function RootLayout() {
           <QueryClientProvider client={queryClient}>
             <ThemeProvider>
               <AuthProvider>
-                <StatusBar style="auto" />
                 <RootLayoutNav />
               </AuthProvider>
             </ThemeProvider>
@@ -62,17 +61,22 @@ export default function RootLayout() {
 }
 
 function RootLayoutNav() {
+  const { isDark } = useTheme();
+  
   return (
-    <Stack screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-      <Stack.Screen name="(app)" options={{ headerShown: false }} />
-      <Stack.Screen 
-        name="bank-connect/[bankId]" 
-        options={{ 
-          presentation: "modal",
-          headerShown: false
-        }} 
-      />
-    </Stack>
+    <>
+      <StatusBar style={isDark ? "light" : "dark"} />
+      <Stack screenOptions={{ headerShown: false }}>
+        <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+        <Stack.Screen name="(app)" options={{ headerShown: false }} />
+        <Stack.Screen 
+          name="bank-connect/[bankId]" 
+          options={{ 
+            presentation: "modal",
+            headerShown: false
+          }} 
+        />
+      </Stack>
+    </>
   );
 }

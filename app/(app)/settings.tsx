@@ -4,6 +4,7 @@ import { useTheme } from "@/context/theme-context";
 import { useAuth } from "@/context/auth-context";
 import { useFirebaseAuth } from "@/hooks/use-firebase-auth";
 import { useBanks } from "@/hooks/use-banks";
+import { useBiometricAuth } from "@/hooks/use-biometric-auth";
 import { useRouter } from "expo-router";
 import { 
   Moon, 
@@ -12,16 +13,19 @@ import {
   FileText, 
   HelpCircle, 
   LogOut,
-  ChevronRight
+  ChevronRight,
+  Fingerprint,
+  Smartphone
 } from "lucide-react-native";
 import * as Haptics from "expo-haptics";
 import { Platform } from "react-native";
 
 export default function SettingsScreen() {
-  const { colors, isDark, toggleTheme } = useTheme();
+  const { colors, isDark, toggleTheme, followSystem, setFollowSystem } = useTheme();
   const { logout } = useAuth();
   const { user, logout: firebaseLogout } = useFirebaseAuth();
   const { clearAllBanks } = useBanks();
+  const { isSupported, isEnabled, biometricType, enableBiometric, disableBiometric } = useBiometricAuth();
   const router = useRouter();
 
   const handleLogout = () => {
@@ -86,6 +90,40 @@ export default function SettingsScreen() {
     router.push("/(auth)/create-pin");
   };
 
+  const handleBiometricToggle = async () => {
+    if (isEnabled) {
+      Alert.alert(
+        `Disable ${biometricType}?`,
+        `You will need to enter your PIN to unlock the app.`,
+        [
+          { text: "Cancel", style: "cancel" },
+          {
+            text: "Disable",
+            style: "destructive",
+            onPress: () => {
+              disableBiometric();
+              if (Platform.OS !== "web") {
+                Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+              }
+            }
+          }
+        ]
+      );
+    } else {
+      const success = await enableBiometric();
+      if (success && Platform.OS !== "web") {
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      }
+    }
+  };
+
+  const handleFollowSystemToggle = () => {
+    setFollowSystem(!followSystem);
+    if (Platform.OS !== "web") {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    }
+  };
+
   const renderSettingItem = (
     icon: React.ReactNode,
     title: string,
@@ -124,6 +162,16 @@ export default function SettingsScreen() {
         <View style={styles.section}>
           <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>Appearance</Text>
           {renderSettingItem(
+            <Smartphone size={22} color={colors.primary} style={styles.settingIcon} />,
+            "Follow System Theme",
+            <Switch
+              value={followSystem}
+              onValueChange={handleFollowSystemToggle}
+              trackColor={{ false: colors.border, true: colors.primaryLight }}
+              thumbColor={followSystem ? colors.primary : colors.backgroundAccent}
+            />
+          )}
+          {!followSystem && renderSettingItem(
             <Moon size={22} color={colors.primary} style={styles.settingIcon} />,
             "Dark Mode",
             <Switch
@@ -142,6 +190,16 @@ export default function SettingsScreen() {
             "Change PIN",
             <ChevronRight size={20} color={colors.textSecondary} />,
             handleChangePin
+          )}
+          {isSupported && renderSettingItem(
+            <Fingerprint size={22} color={colors.primary} style={styles.settingIcon} />,
+            biometricType,
+            <Switch
+              value={isEnabled}
+              onValueChange={handleBiometricToggle}
+              trackColor={{ false: colors.border, true: colors.primaryLight }}
+              thumbColor={isEnabled ? colors.primary : colors.backgroundAccent}
+            />
           )}
           {renderSettingItem(
             <Shield size={22} color={colors.primary} style={styles.settingIcon} />,

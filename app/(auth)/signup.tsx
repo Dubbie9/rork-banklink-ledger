@@ -5,17 +5,19 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useTheme } from "@/context/theme-context";
 import { useFirebaseAuth } from "@/hooks/use-firebase-auth";
 import { ArrowLeft, Mail, Lock, User, Eye, EyeOff } from "lucide-react-native";
+import { Image } from "expo-image";
 
 export default function SignupScreen() {
   const router = useRouter();
   const { colors } = useTheme();
-  const { signup } = useFirebaseAuth();
+  const { signup, signInWithGoogle } = useFirebaseAuth();
   
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
   
   const handleSignup = async () => {
     if (!name || !email || !password) {
@@ -31,12 +33,27 @@ export default function SignupScreen() {
     setLoading(true);
     try {
       await signup(email, password, name);
-      router.replace("/(app)");
+      // After successful signup, redirect to PIN creation
+      router.replace("/(auth)/create-pin");
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : "Please try again with a different email";
       Alert.alert("Signup Failed", errorMessage);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleGoogleSignup = async () => {
+    setGoogleLoading(true);
+    try {
+      await signInWithGoogle();
+      // After successful Google signup, redirect to PIN creation
+      router.replace("/(auth)/create-pin");
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : "Google sign-up failed";
+      Alert.alert("Google Sign-Up Failed", errorMessage);
+    } finally {
+      setGoogleLoading(false);
     }
   };
   
@@ -127,12 +144,39 @@ export default function SignupScreen() {
               { backgroundColor: colors.primary, opacity: pressed ? 0.9 : 1 }
             ]}
             onPress={handleSignup}
-            disabled={loading}
+            disabled={loading || googleLoading}
           >
             {loading ? (
               <ActivityIndicator color="#FFFFFF" />
             ) : (
               <Text style={styles.signupButtonText}>Create Account</Text>
+            )}
+          </Pressable>
+          
+          <View style={styles.divider}>
+            <View style={[styles.dividerLine, { backgroundColor: colors.border }]} />
+            <Text style={[styles.dividerText, { color: colors.textSecondary }]}>or</Text>
+            <View style={[styles.dividerLine, { backgroundColor: colors.border }]} />
+          </View>
+          
+          <Pressable
+            style={({ pressed }) => [
+              styles.googleButton,
+              { backgroundColor: colors.backgroundAccent, borderColor: colors.border, opacity: pressed ? 0.9 : 1 }
+            ]}
+            onPress={handleGoogleSignup}
+            disabled={loading || googleLoading}
+          >
+            {googleLoading ? (
+              <ActivityIndicator color={colors.text} />
+            ) : (
+              <>
+                <Image
+                  source={{ uri: 'https://developers.google.com/identity/images/g-logo.png' }}
+                  style={styles.googleIcon}
+                />
+                <Text style={[styles.googleButtonText, { color: colors.text }]}>Continue with Google</Text>
+              </>
             )}
           </Pressable>
         </View>
@@ -227,5 +271,36 @@ const styles = StyleSheet.create({
   loginText: {
     fontSize: 14,
     fontWeight: "600",
+  },
+  divider: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginVertical: 24,
+  },
+  dividerLine: {
+    flex: 1,
+    height: 1,
+  },
+  dividerText: {
+    marginHorizontal: 16,
+    fontSize: 14,
+  },
+  googleButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    height: 56,
+    borderRadius: 12,
+    borderWidth: 1,
+    marginBottom: 16,
+  },
+  googleIcon: {
+    width: 20,
+    height: 20,
+    marginRight: 12,
+  },
+  googleButtonText: {
+    fontSize: 16,
+    fontWeight: "500",
   },
 });

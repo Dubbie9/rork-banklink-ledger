@@ -1,12 +1,13 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { View, Text, StyleSheet, Pressable, Animated } from "react-native";
 import { useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useAuth } from "@/context/auth-context";
 import { useTheme } from "@/context/theme-context";
-import { Lock } from "lucide-react-native";
+import { Lock, Fingerprint } from "lucide-react-native";
 import * as Haptics from "expo-haptics";
 import { Platform } from "react-native";
+import { useBiometricAuth } from "@/hooks/use-biometric-auth";
 
 export default function EnterPin() {
   const [enteredPin, setEnteredPin] = useState("");
@@ -14,8 +15,31 @@ export default function EnterPin() {
   const { pin, authenticated, setAuthenticated } = useAuth();
   const router = useRouter();
   const { colors } = useTheme();
+  const { isEnabled, biometricType, authenticateWithBiometric } = useBiometricAuth();
   
   const shakeAnimation = useRef(new Animated.Value(0)).current;
+
+  // Try biometric authentication on mount if enabled
+  useEffect(() => {
+    if (isEnabled) {
+      handleBiometricAuth();
+    }
+  }, [isEnabled]);
+
+  const handleBiometricAuth = async () => {
+    try {
+      const result = await authenticateWithBiometric(`Use ${biometricType} to unlock`);
+      if (result.success) {
+        if (Platform.OS !== "web") {
+          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        }
+        setAuthenticated(true);
+        router.replace("/(app)");
+      }
+    } catch (error) {
+      console.log("Biometric authentication failed, falling back to PIN");
+    }
+  };
 
   const handleNumberPress = (number: string) => {
     if (Platform.OS !== "web") {
@@ -104,6 +128,13 @@ export default function EnterPin() {
 
       {error ? (
         <Text style={[styles.errorText, { color: colors.error }]}>{error}</Text>
+      ) : isEnabled ? (
+        <View style={styles.biometricHint}>
+          <Fingerprint size={16} color={colors.primary} />
+          <Text style={[styles.biometricHintText, { color: colors.textSecondary }]}>
+            Use {biometricType} or enter PIN
+          </Text>
+        </View>
       ) : (
         <View style={styles.spacer} />
       )}
@@ -126,7 +157,22 @@ export default function EnterPin() {
             </Text>
           </Pressable>
         ))}
-        <View style={styles.keypadButton} />
+        {isEnabled ? (
+          <Pressable
+            style={({ pressed }) => [
+              styles.keypadButton,
+              { 
+                backgroundColor: pressed ? colors.primaryLight : colors.background,
+                borderColor: colors.primary
+              }
+            ]}
+            onPress={handleBiometricAuth}
+          >
+            <Fingerprint size={24} color={colors.primary} />
+          </Pressable>
+        ) : (
+          <View style={styles.keypadButton} />
+        )}
         <Pressable
           style={({ pressed }) => [
             styles.keypadButton,
@@ -215,5 +261,15 @@ const styles = StyleSheet.create({
   keypadButtonText: {
     fontSize: 28,
     fontWeight: "500",
+  },
+  biometricHint: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 16,
+  },
+  biometricHintText: {
+    fontSize: 12,
+    marginLeft: 6,
   },
 });

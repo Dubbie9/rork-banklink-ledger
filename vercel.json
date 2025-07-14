@@ -1,0 +1,22 @@
+{
+  "buildCommand": "expo export -p web",
+  "outputDirectory": "dist",
+  "devCommand": "expo",
+  "cleanUrls": true,
+  "framework": null,
+  "functions": {
+    "backend/hono.ts": {
+      "runtime": "nodejs20.x"
+    }
+  },
+  "rewrites": [
+    {
+      "source": "/api/(.*)",
+      "destination": "/backend/hono.ts"
+    },
+    {
+      "source": "/:path*",
+      "destination": "/"
+    }
+  ]
+}

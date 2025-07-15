@@ -20,7 +20,7 @@ export function useRealBanks() {
       
       const institutions = await trpcClient.gocardless.institutions.list.query({
         accessToken,
-        country: "gb",
+        countries: ["gb", "us"],
       });
       
       console.log(`Fetched ${institutions.length} institutions`);
@@ -31,6 +31,8 @@ export function useRealBanks() {
         name: institution.name,
         color: institution.color,
         logoUrl: institution.logoUrl || "",
+        country: institution.country,
+        countries: institution.countries,
       }));
       
       setBanks(transformedBanks);

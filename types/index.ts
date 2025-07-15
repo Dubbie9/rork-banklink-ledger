@@ -6,6 +6,8 @@ export interface Bank {
   accountNumber?: string;
   lastUpdated?: string;
   transactionCount?: number;
+  country?: string;
+  countries?: string[];
 }
 
 export interface Transaction {

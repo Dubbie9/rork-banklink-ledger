@@ -55,50 +55,17 @@ export default function DebugScreen() {
       const authResult = await trpcClient.gocardless.auth.getAccessToken.mutate();
       console.log('Auth successful:', authResult);
       
-      // Then fetch institutions for multiple countries
+      // Then fetch institutions
       const banksResult = await trpcClient.gocardless.institutions.list.query({
         accessToken: authResult.access,
-        countries: ['gb', 'us']
+        country: 'gb'
       });
       
       setDebugInfo({ 
         type: 'banks', 
         data: { 
           auth: authResult, 
-          totalBanks: banksResult.length,
-          banksByCountry: {
-            GB: banksResult.filter(b => b.country === 'GB').length,
-            US: banksResult.filter(b => b.country === 'US').length,
-          },
-          sampleBanks: banksResult.slice(0, 5) // Show first 5 banks only
-        } 
-      });
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Unknown error');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const testUSBanks = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      // First get access token
-      const authResult = await trpcClient.gocardless.auth.getAccessToken.mutate();
-      console.log('Auth successful:', authResult);
-      
-      // Then fetch US institutions only
-      const banksResult = await trpcClient.gocardless.institutions.list.query({
-        accessToken: authResult.access,
-        countries: ['us']
-      });
-      
-      setDebugInfo({ 
-        type: 'us-banks', 
-        data: { 
-          totalUSBanks: banksResult.length,
-          sampleUSBanks: banksResult.slice(0, 10) // Show first 10 US banks
+          banks: banksResult.slice(0, 5) // Show first 5 banks only
         } 
       });
     } catch (err) {
@@ -126,11 +93,7 @@ export default function DebugScreen() {
         </TouchableOpacity>
 
         <TouchableOpacity style={styles.button} onPress={testBanksFetch}>
-          <Text style={styles.buttonText}>Test Banks Fetch (GB + US)</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity style={styles.button} onPress={testUSBanks}>
-          <Text style={styles.buttonText}>Test US Banks Only</Text>
+          <Text style={styles.buttonText}>Test Banks Fetch (Full Flow)</Text>
         </TouchableOpacity>
 
         {loading && <Text style={styles.loading}>Loading...</Text>}

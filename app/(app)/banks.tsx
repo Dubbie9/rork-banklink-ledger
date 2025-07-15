@@ -5,7 +5,7 @@ import { useRealBanks } from "@/hooks/use-real-banks";
 import { useBankConnection } from "@/hooks/use-bank-connection";
 import { useGoCardless } from "@/hooks/use-gocardless";
 import { Bank } from "@/types";
-import { Plus, RefreshCw, Trash2, ChevronRight, Search, X, Filter } from "lucide-react-native";
+import { Plus, RefreshCw, Trash2, ChevronRight, Search, X } from "lucide-react-native";
 import { useRouter } from "expo-router";
 import * as Haptics from "expo-haptics";
 import { Platform } from "react-native";
@@ -35,33 +35,11 @@ export default function BanksScreen() {
   const router = useRouter();
   const { user } = useFirebaseAuth();
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedCountry, setSelectedCountry] = useState<string>("all");
-  const [showCountryFilter, setShowCountryFilter] = useState(false);
 
-  // Get unique countries from banks
-  const availableCountries = Array.from(new Set(
-    availableBanks.map(bank => bank.country).filter(Boolean)
-  )).sort();
-
-  // Filter banks based on search query and country
-  const filteredBanks = availableBanks.filter(bank => {
-    const matchesSearch = bank.name.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesCountry = selectedCountry === "all" || bank.country === selectedCountry;
-    return matchesSearch && matchesCountry;
-  });
-
-  const getCountryName = (countryCode: string) => {
-    const countryNames: { [key: string]: string } = {
-      'GB': '🇬🇧 United Kingdom',
-      'US': '🇺🇸 United States',
-      'DE': '🇩🇪 Germany',
-      'FR': '🇫🇷 France',
-      'ES': '🇪🇸 Spain',
-      'IT': '🇮🇹 Italy',
-      'NL': '🇳🇱 Netherlands',
-    };
-    return countryNames[countryCode.toUpperCase()] || `${countryCode.toUpperCase()}`;
-  };
+  // Filter banks based on search query
+  const filteredBanks = availableBanks.filter(bank =>
+    bank.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   const handleAddBank = (bank: Bank) => {
     // Authentication enforcement
@@ -215,14 +193,7 @@ export default function BanksScreen() {
             size={32} 
             fallbackColor={item.color} 
           />
-          <View style={styles.bankNameContainer}>
-            <Text style={[styles.availableBankName, { color: colors.text }]}>{item.name}</Text>
-            {item.country && (
-              <Text style={[styles.bankCountry, { color: colors.textSecondary }]}>
-                {getCountryName(item.country)}
-              </Text>
-            )}
-          </View>
+          <Text style={[styles.availableBankName, { color: colors.text }]}>{item.name}</Text>
         </View>
         {isConnected ? (
           <Text style={[styles.connectedLabel, { color: colors.success }]}>Connected</Text>
@@ -300,73 +271,22 @@ export default function BanksScreen() {
           </View>
         )}
         
-        {/* Search and Filter Bar */}
-        <View style={styles.searchFilterContainer}>
-          <View style={[styles.searchContainer, { backgroundColor: colors.backgroundAccent, borderColor: colors.border }]}>
-            <Search size={20} color={colors.textSecondary} style={styles.searchIcon} />
-            <TextInput
-              style={[styles.searchInput, { color: colors.text }]}
-              placeholder="Search for your bank…"
-              placeholderTextColor={colors.textSecondary}
-              value={searchQuery}
-              onChangeText={setSearchQuery}
-            />
-            {searchQuery.length > 0 && (
-              <Pressable onPress={() => setSearchQuery("")} style={styles.clearButton}>
-                <X size={20} color={colors.textSecondary} />
-              </Pressable>
-            )}
-          </View>
-          
-          <Pressable
-            style={[styles.filterButton, { 
-              backgroundColor: selectedCountry !== "all" ? colors.primary : colors.backgroundAccent,
-              borderColor: colors.border 
-            }]}
-            onPress={() => setShowCountryFilter(!showCountryFilter)}
-          >
-            <Filter size={20} color={selectedCountry !== "all" ? "#FFFFFF" : colors.textSecondary} />
-          </Pressable>
+        {/* Search Bar */}
+        <View style={[styles.searchContainer, { backgroundColor: colors.backgroundAccent, borderColor: colors.border }]}>
+          <Search size={20} color={colors.textSecondary} style={styles.searchIcon} />
+          <TextInput
+            style={[styles.searchInput, { color: colors.text }]}
+            placeholder="Search for your bank…"
+            placeholderTextColor={colors.textSecondary}
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+          />
+          {searchQuery.length > 0 && (
+            <Pressable onPress={() => setSearchQuery("")} style={styles.clearButton}>
+              <X size={20} color={colors.textSecondary} />
+            </Pressable>
+          )}
         </View>
-        
-        {/* Country Filter */}
-        {showCountryFilter && (
-          <View style={[styles.countryFilterContainer, { backgroundColor: colors.backgroundAccent, borderColor: colors.border }]}>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.countryFilters}>
-              <Pressable
-                style={[styles.countryFilter, {
-                  backgroundColor: selectedCountry === "all" ? colors.primary : "transparent",
-                  borderColor: colors.border
-                }]}
-                onPress={() => {
-                  setSelectedCountry("all");
-                  setShowCountryFilter(false);
-                }}
-              >
-                <Text style={[styles.countryFilterText, {
-                  color: selectedCountry === "all" ? "#FFFFFF" : colors.text
-                }]}>All Countries</Text>
-              </Pressable>
-              {availableCountries.map((country) => (
-                <Pressable
-                  key={country}
-                  style={[styles.countryFilter, {
-                    backgroundColor: selectedCountry === country ? colors.primary : "transparent",
-                    borderColor: colors.border
-                  }]}
-                  onPress={() => {
-                    setSelectedCountry(country || "");
-                    setShowCountryFilter(false);
-                  }}
-                >
-                  <Text style={[styles.countryFilterText, {
-                    color: selectedCountry === country ? "#FFFFFF" : colors.text
-                  }]}>{getCountryName(country || "")}</Text>
-                </Pressable>
-              ))}
-            </ScrollView>
-          </View>
-        )}
       </View>
 
       <ScrollView 
@@ -396,16 +316,13 @@ export default function BanksScreen() {
               Loading available banks...
             </Text>
           </View>
-        ) : filteredBanks.length === 0 && (searchQuery.length > 0 || selectedCountry !== "all") ? (
+        ) : filteredBanks.length === 0 && searchQuery.length > 0 ? (
           <View style={styles.noResultsContainer}>
             <Text style={[styles.noResultsText, { color: colors.textSecondary }]}>
-              {searchQuery.length > 0 
-                ? `No banks found for "${searchQuery}"${selectedCountry !== "all" ? ` in ${getCountryName(selectedCountry)}` : ''}` 
-                : `No banks found in ${getCountryName(selectedCountry)}`
-              }
+              No banks found for "{searchQuery}"
             </Text>
             <Text style={[styles.noResultsSubtext, { color: colors.textSecondary }]}>
-              Try adjusting your search terms or country filter
+              Try adjusting your search terms
             </Text>
           </View>
         ) : (
@@ -636,45 +553,5 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "500",
     textAlign: "center",
-  },
-  bankNameContainer: {
-    flex: 1,
-    marginLeft: 8,
-  },
-  bankCountry: {
-    fontSize: 12,
-    marginTop: 2,
-  },
-  searchFilterContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-  },
-  filterButton: {
-    width: 48,
-    height: 48,
-    borderRadius: 12,
-    borderWidth: 1,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  countryFilterContainer: {
-    marginTop: 12,
-    borderRadius: 12,
-    borderWidth: 1,
-    padding: 12,
-  },
-  countryFilters: {
-    gap: 8,
-  },
-  countryFilter: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
-    borderWidth: 1,
-  },
-  countryFilterText: {
-    fontSize: 14,
-    fontWeight: "500",
   },
 });

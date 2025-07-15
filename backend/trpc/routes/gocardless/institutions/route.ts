@@ -6,63 +6,49 @@ const GOCARDLESS_BASE_URL = "https://bankaccountdata.gocardless.com/api/v2";
 export const getInstitutionsProcedure = publicProcedure
   .input(z.object({ 
     accessToken: z.string(),
-    countries: z.array(z.string()).default(["gb", "us"])
+    country: z.string().default("gb")
   }))
   .query(async ({ input }) => {
     try {
-      console.log(`Fetching institutions for countries: ${input.countries.join(', ')}`);
+      console.log(`Fetching institutions for country: ${input.country}`);
       
-      // Fetch institutions for all requested countries
-      const allInstitutions = [];
-      
-      for (const country of input.countries) {
-        try {
-          const response = await fetch(
-            `${GOCARDLESS_BASE_URL}/institutions/?country=${country}`,
-            {
-              headers: {
-                "Authorization": `Bearer ${input.accessToken}`,
-                "Accept": "application/json",
-              },
-            }
-          );
-
-          console.log(`Institutions response status for ${country}:`, response.status);
-
-          if (response.ok) {
-            const data = await response.json();
-            if (Array.isArray(data)) {
-              console.log(`Fetched ${data.length} institutions for ${country}`);
-              allInstitutions.push(...data.map((institution: any) => ({
-                ...institution,
-                country: country.toUpperCase(),
-              })));
-            }
-          } else {
-            console.warn(`Failed to fetch institutions for ${country}:`, response.statusText);
-          }
-        } catch (countryError) {
-          console.warn(`Error fetching institutions for ${country}:`, countryError);
+      const response = await fetch(
+        `${GOCARDLESS_BASE_URL}/institutions/?country=${input.country}`,
+        {
+          headers: {
+            "Authorization": `Bearer ${input.accessToken}`,
+            "Accept": "application/json",
+          },
         }
+      );
+
+      console.log('Institutions response status:', response.status);
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Institutions error response:', errorText);
+        throw new Error(`Failed to fetch institutions: ${response.statusText} - ${errorText}`);
       }
+
+      const data = await response.json();
+      console.log(`Fetched ${data.length} institutions`);
       
-      if (allInstitutions.length === 0) {
-        throw new Error('No institutions found for the requested countries');
+      if (!Array.isArray(data)) {
+        console.error('Unexpected institutions response format:', data);
+        throw new Error('Invalid response format from GoCardless');
       }
       
       // Transform to match our existing Bank interface
-      const institutions = allInstitutions.map((institution: any) => ({
+      const institutions = data.map((institution: any) => ({
         id: institution.id,
         name: institution.name,
         logoUrl: institution.logo || "",
         color: getColorForBank(institution.name),
         bic: institution.bic,
         transaction_total_days: institution.transaction_total_days,
-        countries: institution.countries || [institution.country],
-        country: institution.country,
+        countries: institution.countries,
       }));
 
-      console.log(`Total institutions fetched: ${institutions.length}`);
       return institutions;
     } catch (error) {
       console.error("GoCardless institutions error:", error);
@@ -73,7 +59,6 @@ export const getInstitutionsProcedure = publicProcedure
 // Helper function to assign colors to banks
 function getColorForBank(bankName: string): string {
   const colorMap: { [key: string]: string } = {
-    // UK Banks
     "Lloyds Bank": "#006A4D",
     "Barclays": "#00AEEF", 
     "HSBC": "#DB0011",
@@ -86,19 +71,6 @@ function getColorForBank(bankName: string): string {
     "Monzo": "#FF4D55",
     "Starling Bank": "#7433FF",
     "Revolut": "#191C1F",
-    // US Banks
-    "Bank of America": "#E31837",
-    "Chase": "#117ACA",
-    "Wells Fargo": "#D71921",
-    "Citibank": "#1976D2",
-    "Capital One": "#004879",
-    "American Express": "#006FCF",
-    "Goldman Sachs": "#0066CC",
-    "Morgan Stanley": "#0066CC",
-    "US Bank": "#005DAA",
-    "PNC Bank": "#F47920",
-    "TD Bank": "#00B04F",
-    "Ally Bank": "#A020F0",
   };
 
   // Try to match bank name

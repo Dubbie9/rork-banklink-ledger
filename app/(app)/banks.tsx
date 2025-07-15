@@ -355,13 +355,13 @@ export default function BanksScreen() {
                     borderColor: colors.border
                   }]}
                   onPress={() => {
-                    setSelectedCountry(country);
+                    setSelectedCountry(country || "");
                     setShowCountryFilter(false);
                   }}
                 >
                   <Text style={[styles.countryFilterText, {
                     color: selectedCountry === country ? "#FFFFFF" : colors.text
-                  }]}>{getCountryName(country)}</Text>
+                  }]}>{getCountryName(country || "")}</Text>
                 </Pressable>
               ))}
             </ScrollView>
@@ -636,5 +636,45 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "500",
     textAlign: "center",
+  },
+  bankNameContainer: {
+    flex: 1,
+    marginLeft: 8,
+  },
+  bankCountry: {
+    fontSize: 12,
+    marginTop: 2,
+  },
+  searchFilterContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+  },
+  filterButton: {
+    width: 48,
+    height: 48,
+    borderRadius: 12,
+    borderWidth: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  countryFilterContainer: {
+    marginTop: 12,
+    borderRadius: 12,
+    borderWidth: 1,
+    padding: 12,
+  },
+  countryFilters: {
+    gap: 8,
+  },
+  countryFilter: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    borderWidth: 1,
+  },
+  countryFilterText: {
+    fontSize: 14,
+    fontWeight: "500",
   },
 });

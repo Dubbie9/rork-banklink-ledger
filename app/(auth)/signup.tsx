@@ -33,8 +33,8 @@ export default function SignupScreen() {
     setLoading(true);
     try {
       await signup(email, password, name);
-      // After successful signup, redirect to PIN creation
-      router.replace("/(auth)/create-pin");
+      // After successful signup, redirect to profile completion
+      router.replace("/(auth)/complete-profile");
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : "Please try again with a different email";
       Alert.alert("Signup Failed", errorMessage);
@@ -47,8 +47,8 @@ export default function SignupScreen() {
     setGoogleLoading(true);
     try {
       await signInWithGoogle();
-      // After successful Google signup, redirect to PIN creation
-      router.replace("/(auth)/create-pin");
+      // After successful Google signup, redirect to profile completion
+      router.replace("/(auth)/complete-profile");
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : "Google sign-up failed";
       Alert.alert("Google Sign-Up Failed", errorMessage);

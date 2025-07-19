@@ -12,6 +12,7 @@ import TransactionList from "@/components/TransactionList";
 import { LinearGradient } from "expo-linear-gradient";
 import { useEffect, useRef } from "react";
 import { useFirebaseAuth } from "@/hooks/use-firebase-auth";
+import { useUserProfile } from "@/hooks/use-user-profile";
 
 export default function HomeScreen() {
   const { colors } = useTheme();
@@ -20,6 +21,7 @@ export default function HomeScreen() {
   const { counterparties } = useCounterparties();
   const router = useRouter();
   const { user } = useFirebaseAuth();
+  const { profile } = useUserProfile();
   const [timeRange, setTimeRange] = useState<"7d" | "30d" | "90d">("30d");
   
   // Animation values
@@ -63,8 +65,9 @@ export default function HomeScreen() {
 
   const getGreeting = () => {
     const hour = new Date().getHours();
-    // Extract first name from user data, prioritizing firstName field
-    const firstName = user?.firstName || 
+    // Extract first name from profile first, then user data
+    const firstName = profile?.firstName || 
+                     user?.firstName || 
                      (user?.displayName ? user.displayName.split(' ')[0] : null) ||
                      (user?.email ? user.email.split('@')[0] : 'there');
     
@@ -74,8 +77,9 @@ export default function HomeScreen() {
   };
 
   const getWelcomeMessage = () => {
-    // Extract first name from user data, prioritizing firstName field
-    const firstName = user?.firstName || 
+    // Extract first name from profile first, then user data
+    const firstName = profile?.firstName || 
+                     user?.firstName || 
                      (user?.displayName ? user.displayName.split(' ')[0] : null) ||
                      (user?.email ? user.email.split('@')[0] : null);
     

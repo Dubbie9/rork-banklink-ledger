@@ -2,6 +2,7 @@ import { createTRPCRouter } from "./create-context";
 import hiRoute from "./routes/example/hi/route";
 import { getAccessTokenProcedure, refreshTokenProcedure } from "./routes/gocardless/auth/route";
 import { getInstitutionsProcedure } from "./routes/gocardless/institutions/route";
+import { getInstitutionsByCountryProcedure } from "./routes/gocardless/institutions-by-country/route";
 import { createRequisitionProcedure, getRequisitionProcedure, deleteRequisitionProcedure } from "./routes/gocardless/requisitions/route";
 import { getAccountDetailsProcedure, getAccountBalancesProcedure, getAccountTransactionsProcedure } from "./routes/gocardless/accounts/route";
 import { createAgreementProcedure, getAgreementProcedure, deleteAgreementProcedure } from "./routes/gocardless/agreements/route";
@@ -21,6 +22,7 @@ export const appRouter = createTRPCRouter({
     }),
     institutions: createTRPCRouter({
       list: getInstitutionsProcedure,
+      byCountry: getInstitutionsByCountryProcedure,
     }),
     requisitions: createTRPCRouter({
       create: createRequisitionProcedure,

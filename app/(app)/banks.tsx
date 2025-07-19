@@ -10,6 +10,7 @@ import { useRouter } from "expo-router";
 import * as Haptics from "expo-haptics";
 import { Platform } from "react-native";
 import { useFirebaseAuth } from "@/hooks/use-firebase-auth";
+import { useUserProfile } from "@/hooks/use-user-profile";
 import BankLogo from "@/components/BankLogo";
 import { useState } from "react";
 

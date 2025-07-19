@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useGoCardless } from "./use-gocardless";
+import { useUserProfile } from "./use-user-profile";
 import { trpcClient } from "@/lib/trpc";
 import { Bank } from "@/types";
 
@@ -8,8 +9,9 @@ export function useRealBanks() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { getValidAccessToken } = useGoCardless();
+  const { profile } = useUserProfile();
   
-  const fetchBanks = async () => {
+  const fetchBanks = async (countryCode?: string) => {
     setLoading(true);
     setError(null);
     
@@ -18,12 +20,16 @@ export function useRealBanks() {
       const accessToken = await getValidAccessToken();
       console.log("Access token obtained, fetching institutions...");
       
-      const institutions = await trpcClient.gocardless.institutions.list.query({
+      // Use user's country from profile, fallback to GB
+      const country = countryCode || profile?.country?.code || "gb";
+      console.log(`Fetching institutions for country: ${country}`);
+      
+      const institutions = await trpcClient.gocardless.institutions.byCountry.query({
         accessToken,
-        country: "gb",
+        country,
       });
       
-      console.log(`Fetched ${institutions.length} institutions`);
+      console.log(`Fetched ${institutions.length} institutions for ${country}`);
       
       // Transform institutions to Bank format
       const transformedBanks: Bank[] = institutions.map((institution: any) => ({
@@ -44,13 +50,15 @@ export function useRealBanks() {
   };
   
   useEffect(() => {
+    // Only fetch banks if we have a profile or use default
     fetchBanks();
-  }, []);
+  }, [profile?.country?.code]);
   
   return {
     banks,
     loading,
     error,
-    refetch: fetchBanks,
+    refetch: () => fetchBanks(),
+    fetchBanksForCountry: fetchBanks,
   };
 }

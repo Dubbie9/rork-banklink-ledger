@@ -4,6 +4,7 @@ import { useTheme } from "@/context/theme-context";
 import { useRealBanks } from "@/hooks/use-real-banks";
 import { useBankConnection } from "@/hooks/use-bank-connection";
 import { useGoCardless } from "@/hooks/use-gocardless";
+import { useConnectedBanks } from "@/hooks/use-connected-banks";
 import { Bank } from "@/types";
 import { Plus, RefreshCw, Trash2, ChevronRight, Search, X } from "lucide-react-native";
 import { useRouter } from "expo-router";
@@ -14,19 +15,7 @@ import { useUserProfile } from "@/hooks/use-user-profile";
 import BankLogo from "@/components/BankLogo";
 import { useState } from "react";
 
-// Mock connected banks for now - in real implementation, this would come from your backend
-const mockConnectedBanks = [
-  {
-    id: "REVOLUT_REVOGB21",
-    name: "Revolut",
-    color: "#191C1F",
-    logoUrl: "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=200&h=200&fit=crop&crop=center",
-    accountNumber: "****1234",
-    lastUpdated: "Today",
-    transactionCount: 45,
-    requisitionId: "req_123",
-  },
-];
+
 
 export default function BanksScreen() {
   const { colors } = useTheme();

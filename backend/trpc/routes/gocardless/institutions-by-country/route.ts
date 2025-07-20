@@ -12,6 +12,15 @@ export const getInstitutionsByCountryProcedure = publicProcedure
     try {
       console.log(`Fetching institutions for country: ${input.country}`);
       
+      // For US and Nigeria, return mock data since GoCardless has limited coverage
+      if (input.country.toLowerCase() === 'us') {
+        return getMockUSBanks();
+      }
+      
+      if (input.country.toLowerCase() === 'ng') {
+        return getMockNigerianBanks();
+      }
+      
       const response = await fetch(
         `${GOCARDLESS_BASE_URL}/institutions/?country=${input.country}`,
         {
@@ -103,6 +112,26 @@ function getColorForBank(bankName: string): string {
     "ABN AMRO": "#00A651",
     "Rabobank": "#FF6200",
     "ING Bank": "#FF6200",
+    
+    // US Banks
+    "Chase": "#0066B2",
+    "Bank of America": "#E31837",
+    "Wells Fargo": "#D71921",
+    "Citibank": "#1976D2",
+    "Capital One": "#004879",
+    "American Express": "#006FCF",
+    "Goldman Sachs": "#1E3A8A",
+    "Morgan Stanley": "#0066CC",
+    
+    // Nigerian Banks
+    "Access Bank": "#E31837",
+    "Zenith Bank": "#FF6B35",
+    "Guaranty Trust Bank": "#FF6200",
+    "First Bank of Nigeria": "#004225",
+    "United Bank for Africa": "#E31837",
+    "Fidelity Bank": "#1E3A8A",
+    "Sterling Bank": "#7B68EE",
+    "Stanbic IBTC": "#0066CC",
   };
 
   // Try to match bank name
@@ -114,4 +143,156 @@ function getColorForBank(bankName: string): string {
 
   // Default color
   return "#4F46E5";
+}
+
+// Mock US banks data
+function getMockUSBanks() {
+  return [
+    {
+      id: "CHASE_US",
+      name: "Chase",
+      logoUrl: "",
+      color: "#0066B2",
+      bic: "CHASUS33",
+      transaction_total_days: 90,
+      countries: ["US"],
+      country: "us",
+    },
+    {
+      id: "BANK_OF_AMERICA_US",
+      name: "Bank of America",
+      logoUrl: "",
+      color: "#E31837",
+      bic: "BOFAUS3N",
+      transaction_total_days: 90,
+      countries: ["US"],
+      country: "us",
+    },
+    {
+      id: "WELLS_FARGO_US",
+      name: "Wells Fargo",
+      logoUrl: "",
+      color: "#D71921",
+      bic: "WFBIUS6S",
+      transaction_total_days: 90,
+      countries: ["US"],
+      country: "us",
+    },
+    {
+      id: "CITIBANK_US",
+      name: "Citibank",
+      logoUrl: "",
+      color: "#1976D2",
+      bic: "CITIUS33",
+      transaction_total_days: 90,
+      countries: ["US"],
+      country: "us",
+    },
+    {
+      id: "CAPITAL_ONE_US",
+      name: "Capital One",
+      logoUrl: "",
+      color: "#004879",
+      bic: "HIBKUS44",
+      transaction_total_days: 90,
+      countries: ["US"],
+      country: "us",
+    },
+    {
+      id: "AMERICAN_EXPRESS_US",
+      name: "American Express",
+      logoUrl: "",
+      color: "#006FCF",
+      bic: "AEXPUS33",
+      transaction_total_days: 90,
+      countries: ["US"],
+      country: "us",
+    },
+  ];
+}
+
+// Mock Nigerian banks data
+function getMockNigerianBanks() {
+  return [
+    {
+      id: "ACCESS_BANK_NG",
+      name: "Access Bank",
+      logoUrl: "",
+      color: "#E31837",
+      bic: "ABNGNGLA",
+      transaction_total_days: 90,
+      countries: ["NG"],
+      country: "ng",
+    },
+    {
+      id: "ZENITH_BANK_NG",
+      name: "Zenith Bank",
+      logoUrl: "",
+      color: "#FF6B35",
+      bic: "ZEIBNGLA",
+      transaction_total_days: 90,
+      countries: ["NG"],
+      country: "ng",
+    },
+    {
+      id: "GTB_NG",
+      name: "Guaranty Trust Bank",
+      logoUrl: "",
+      color: "#FF6200",
+      bic: "GTBINGLA",
+      transaction_total_days: 90,
+      countries: ["NG"],
+      country: "ng",
+    },
+    {
+      id: "FIRST_BANK_NG",
+      name: "First Bank of Nigeria",
+      logoUrl: "",
+      color: "#004225",
+      bic: "FBNINGLA",
+      transaction_total_days: 90,
+      countries: ["NG"],
+      country: "ng",
+    },
+    {
+      id: "UBA_NG",
+      name: "United Bank for Africa",
+      logoUrl: "",
+      color: "#E31837",
+      bic: "UNAFNGLA",
+      transaction_total_days: 90,
+      countries: ["NG"],
+      country: "ng",
+    },
+    {
+      id: "FIDELITY_BANK_NG",
+      name: "Fidelity Bank",
+      logoUrl: "",
+      color: "#1E3A8A",
+      bic: "FIDTNGLA",
+      transaction_total_days: 90,
+      countries: ["NG"],
+      country: "ng",
+    },
+    {
+      id: "STERLING_BANK_NG",
+      name: "Sterling Bank",
+      logoUrl: "",
+      color: "#7B68EE",
+      bic: "STBLNGLA",
+      transaction_total_days: 90,
+      countries: ["NG"],
+      country: "ng",
+    },
+    {
+      id: "STANBIC_IBTC_NG",
+      name: "Stanbic IBTC",
+      logoUrl: "",
+      color: "#0066CC",
+      bic: "SBICNGLA",
+      transaction_total_days: 90,
+      countries: ["NG"],
+      country: "ng",
+    },
+  ];
 }

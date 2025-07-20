@@ -4,7 +4,7 @@ import { useTheme } from "@/context/theme-context";
 import { useRealBanks } from "@/hooks/use-real-banks";
 import { useBankConnection } from "@/hooks/use-bank-connection";
 import { useGoCardless } from "@/hooks/use-gocardless";
-import { useConnectedBanks } from "@/hooks/use-connected-banks";
+import { useConnectedBanks, ConnectedBank } from "@/hooks/use-connected-banks";
 import { Bank } from "@/types";
 import { Plus, RefreshCw, Trash2, ChevronRight, Search, X } from "lucide-react-native";
 import { useRouter } from "expo-router";
@@ -20,6 +20,7 @@ import { useState } from "react";
 export default function BanksScreen() {
   const { colors } = useTheme();
   const { banks: availableBanks, loading: banksLoading, error: banksError, refetch } = useRealBanks();
+  const { banks: connectedBanks } = useConnectedBanks();
   const { disconnectBank } = useBankConnection();
   const { forceReauthenticate } = useGoCardless();
   const router = useRouter();
@@ -92,7 +93,7 @@ export default function BanksScreen() {
     );
   };
 
-  const renderConnectedBank = ({ item }: { item: any }) => (
+  const renderConnectedBank = ({ item }: { item: ConnectedBank }) => (
     <Pressable
       style={({ pressed }) => [
         styles.bankCard,
@@ -161,7 +162,7 @@ export default function BanksScreen() {
   );
 
   const renderAvailableBank = ({ item }: { item: Bank }) => {
-    const isConnected = mockConnectedBanks.some(bank => bank.id === item.id);
+    const isConnected = connectedBanks.some((bank: ConnectedBank) => bank.id === item.id);
     
     return (
       <Pressable
@@ -283,11 +284,11 @@ export default function BanksScreen() {
         style={styles.content}
         showsVerticalScrollIndicator={false}
       >
-        {mockConnectedBanks.length > 0 && (
+        {connectedBanks.length > 0 && (
           <>
             <Text style={[styles.sectionTitle, { color: colors.text }]}>Connected Banks</Text>
             <FlatList
-              data={mockConnectedBanks}
+              data={connectedBanks}
               renderItem={renderConnectedBank}
               keyExtractor={(item) => item.id}
               contentContainerStyle={styles.connectedBanksList}
@@ -296,7 +297,7 @@ export default function BanksScreen() {
           </>
         )}
 
-        <Text style={[styles.sectionTitle, { color: colors.text, marginTop: mockConnectedBanks.length > 0 ? 24 : 0 }]}>
+        <Text style={[styles.sectionTitle, { color: colors.text, marginTop: connectedBanks.length > 0 ? 24 : 0 }]}>
           Available Banks
         </Text>
         

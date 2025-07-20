@@ -20,7 +20,7 @@ export const addConnectedBankProcedure = publicProcedure
     bankName: z.string(),
     requisitionId: z.string(),
     accountId: z.string(),
-    accountNumber: z.string,
+    accountNumber: z.string(),
     color: z.string(),
     logoUrl: z.string().optional(),
   }))

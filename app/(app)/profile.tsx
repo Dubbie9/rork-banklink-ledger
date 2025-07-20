@@ -5,9 +5,8 @@ import { useTheme } from "@/context/theme-context";
 import { useFirebaseAuth } from "@/hooks/use-firebase-auth";
 import { useSubscription } from "@/hooks/use-subscription";
 import { useBanks } from "@/hooks/use-banks";
-import { useUserProfile } from "@/hooks/use-user-profile";
 import { useRouter } from "expo-router";
-import { Building2, CreditCard, LogOut, ChevronRight, Crown, Edit3, User } from "lucide-react-native";
+import { Building2, CreditCard, LogOut, ChevronRight, Crown } from "lucide-react-native";
 import * as Haptics from "expo-haptics";
 import { Platform } from "react-native";
 
@@ -16,7 +15,6 @@ export default function ProfileScreen() {
   const { user, logout, isLoading } = useFirebaseAuth();
   const { subscription, isSubscriptionLoading } = useSubscription();
   const { banks } = useBanks();
-  const { profile } = useUserProfile();
   const router = useRouter();
   
   const handleLogout = async () => {
@@ -34,13 +32,6 @@ export default function ProfileScreen() {
   
   const handleUpgrade = () => {
     router.push("/upgrade");
-  };
-
-  const handleEditProfile = () => {
-    if (Platform.OS !== "web") {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    }
-    router.push("/edit-profile");
   };
   
   if (isLoading) {
@@ -90,38 +81,21 @@ export default function ProfileScreen() {
       </View>
       
       <View style={styles.content}>
-        <Pressable
-          style={({ pressed }) => [
-            styles.profileCard,
-            { 
-              backgroundColor: colors.backgroundAccent, 
-              borderColor: colors.border,
-              opacity: pressed ? 0.95 : 1
-            }
-          ]}
-          onPress={handleEditProfile}
-        >
+        <View style={[styles.profileCard, { backgroundColor: colors.backgroundAccent, borderColor: colors.border }]}>
           <View style={styles.profileInfo}>
             <View style={[styles.profileInitials, { backgroundColor: colors.primaryLight }]}>
               <Text style={[styles.initialsText, { color: colors.primary }]}>
-                {profile?.firstName ? profile.firstName.charAt(0).toUpperCase() : 
-                 user?.displayName ? user.displayName.charAt(0).toUpperCase() : "U"}
+                {user.displayName ? user.displayName.charAt(0).toUpperCase() : "U"}
               </Text>
             </View>
             <View style={styles.profileDetails}>
               <Text style={[styles.profileName, { color: colors.text }]}>
-                {profile ? `${profile.firstName} ${profile.lastName}` : user?.displayName || "User"}
+                {user.displayName || "User"}
               </Text>
               <Text style={[styles.profileEmail, { color: colors.textSecondary }]}>
-                {user?.email}
+                {user.email}
               </Text>
-              {profile?.country && (
-                <Text style={[styles.profileCountry, { color: colors.textSecondary }]}>
-                  {profile.country.flag} {profile.country.name}
-                </Text>
-              )}
             </View>
-            <Edit3 size={20} color={colors.textSecondary} style={styles.editIcon} />
           </View>
           
           {!isSubscriptionLoading && (
@@ -142,7 +116,7 @@ export default function ProfileScreen() {
               )}
             </View>
           )}
-        </Pressable>
+        </View>
         
         <View style={styles.section}>
           <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>Account</Text>
@@ -289,15 +263,6 @@ const styles = StyleSheet.create({
   },
   profileEmail: {
     fontSize: 14,
-  },
-  profileCountry: {
-    fontSize: 14,
-    marginTop: 2,
-  },
-  editIcon: {
-    position: "absolute",
-    top: 0,
-    right: 0,
   },
   subscriptionBadge: {
     position: "absolute",

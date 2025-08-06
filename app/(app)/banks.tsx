@@ -30,7 +30,8 @@ const mockConnectedBanks = [
 
 export default function BanksScreen() {
   const { colors } = useTheme();
-  const { banks: availableBanks, loading: banksLoading, error: banksError, refetch } = useRealBanks();
+  const { profile } = useUserProfile();
+  const { banks: availableBanks, loading: banksLoading, error: banksError, refetch } = useRealBanks(profile?.country?.code);
   const { disconnectBank } = useBankConnection();
   const { forceReauthenticate } = useGoCardless();
   const router = useRouter();
@@ -261,7 +262,7 @@ export default function BanksScreen() {
       <View style={styles.header}>
         <Text style={[styles.title, { color: colors.text }]}>Banks</Text>
         <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
-          Manage your connected bank accounts
+          {profile?.country ? `Banks available in ${profile.country.name}` : 'Manage your connected bank accounts'}
         </Text>
         
         {banksError && (
@@ -323,7 +324,7 @@ export default function BanksScreen() {
               No banks found for "{searchQuery}"
             </Text>
             <Text style={[styles.noResultsSubtext, { color: colors.textSecondary }]}>
-              Try adjusting your search terms
+              Try adjusting your search terms or check if your bank is supported in {profile?.country?.name || 'your country'}
             </Text>
           </View>
         ) : (

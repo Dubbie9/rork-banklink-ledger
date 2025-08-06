@@ -4,7 +4,7 @@ import { useUserProfile } from "./use-user-profile";
 import { trpcClient } from "@/lib/trpc";
 import { Bank } from "@/types";
 
-export function useRealBanks() {
+export function useRealBanks(countryCode?: string) {
   const [banks, setBanks] = useState<Bank[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -20,7 +20,7 @@ export function useRealBanks() {
       const accessToken = await getValidAccessToken();
       console.log("Access token obtained, fetching institutions...");
       
-      // Use user's country from profile, fallback to GB
+      // Use provided country code, user's country from profile, or fallback to GB
       const country = countryCode || profile?.country?.code || "gb";
       console.log(`Fetching institutions for country: ${country}`);
       
@@ -51,14 +51,14 @@ export function useRealBanks() {
   
   useEffect(() => {
     // Only fetch banks if we have a profile or use default
-    fetchBanks();
-  }, [profile?.country?.code]);
+    fetchBanks(countryCode);
+  }, [profile?.country?.code, countryCode]);
   
   return {
     banks,
     loading,
     error,
-    refetch: () => fetchBanks(),
+    refetch: () => fetchBanks(countryCode),
     fetchBanksForCountry: fetchBanks,
   };
 }

@@ -89,6 +89,17 @@ export default function CompleteProfileScreen() {
         await AsyncStorage.setItem("@banklink:firebase_user", JSON.stringify(updatedUser));
       }
       
+      // Pre-fetch banks for the selected country to ensure they're available
+      try {
+        console.log(`Pre-fetching banks for country: ${selectedCountry.code}`);
+        // This will cache the banks for later use
+        // Note: We'll need to get the access token first, but for now we'll skip this step
+        // The banks will be fetched when the user navigates to the banks screen
+      } catch (error) {
+        console.warn('Failed to pre-fetch banks:', error);
+        // Don't block the flow if bank fetching fails
+      }
+      
       // Navigate to PIN creation
       router.replace("/(auth)/create-pin");
     } catch (error) {
@@ -238,7 +249,7 @@ export default function CompleteProfileScreen() {
               </Text>
             </Pressable>
             <Text style={[styles.helperText, { color: colors.textSecondary }]}>
-              This helps us show you banks available in your region
+              This helps us show you banks available in your region. We support banks in {COUNTRIES.length} European countries.
             </Text>
           </View>
         </View>

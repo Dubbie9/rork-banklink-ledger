@@ -1,5 +1,5 @@
 export const lightColors = {
-  primary: "#4F46E5",
+  primary: "#0077b6",
   primaryLight: "#EEF2FF",
   secondary: "#6366F1",
   secondaryLight: "#E0E7FF",
@@ -20,7 +20,7 @@ export const lightColors = {
 };
 
 export const darkColors = {
-  primary: "#6366F1",
+  primary: "#0077b6",
   primaryLight: "#312E81",
   secondary: "#818CF8",
   secondaryLight: "#3730A3",

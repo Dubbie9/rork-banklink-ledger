@@ -7,6 +7,8 @@ import { createRequisitionProcedure, getRequisitionProcedure, deleteRequisitionP
 import { getAccountDetailsProcedure, getAccountBalancesProcedure, getAccountTransactionsProcedure } from "./routes/gocardless/accounts/route";
 import { createAgreementProcedure, getAgreementProcedure, deleteAgreementProcedure } from "./routes/gocardless/agreements/route";
 import { debugEnvProcedure } from "./routes/debug/env/route";
+import { createUserProcedure } from "./routes/users/create/route";
+import { getUserProcedure } from "./routes/users/get/route";
 
 export const appRouter = createTRPCRouter({
   example: createTRPCRouter({
@@ -14,6 +16,10 @@ export const appRouter = createTRPCRouter({
   }),
   debug: createTRPCRouter({
     env: debugEnvProcedure,
+  }),
+  users: createTRPCRouter({
+    create: createUserProcedure,
+    get: getUserProcedure,
   }),
   gocardless: createTRPCRouter({
     auth: createTRPCRouter({

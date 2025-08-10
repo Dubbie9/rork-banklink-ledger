@@ -38,8 +38,6 @@
     "expo-web-browser": "~14.1.6",
     "hono": "^4.8.5",
     "lucide-react-native": "^0.475.0",
-    "mongodb": "^6.18.0",
-    "mongoose": "^8.17.1",
     "nativewind": "^4.1.23",
     "react": "19.0.0",
     "react-dom": "19.0.0",

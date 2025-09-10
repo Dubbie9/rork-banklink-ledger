@@ -1,19 +1,45 @@
 import { trpcClient } from '@/lib/trpc';
-import { Institution } from '../../core/entities/bank.entity';
-import { GoCardlessRepository } from '../../core/repositories/gocardless.repository';
+import { Institution } from '@/src/core/entities/bank.entity';
+import { GoCardlessRepository } from '@/src/core/repositories/gocardless.repository';
 
 /**
  * GoCardless API implementation
  * Handles all interactions with GoCardless Open Banking API
  */
 export class GoCardlessApiRepository implements GoCardlessRepository {
+  private accessToken: string | null = null;
+  private tokenExpiry: number | null = null;
+
+  /**
+   * Get or refresh access token
+   */
+  private async getAccessToken(): Promise<string> {
+    // Check if we have a valid token
+    if (this.accessToken && this.tokenExpiry && Date.now() < this.tokenExpiry * 1000) {
+      return this.accessToken;
+    }
+
+    try {
+      const tokenData = await trpcClient.gocardless.auth.getAccessToken.mutate();
+      this.accessToken = tokenData.access;
+      this.tokenExpiry = tokenData.access_expires;
+      return this.accessToken!;
+    } catch (error) {
+      console.error('Failed to get access token:', error);
+      throw new Error('Failed to authenticate with banking service');
+    }
+  }
   
   /**
    * Get all available institutions
    */
   async getAllInstitutions(): Promise<Institution[]> {
     try {
-      const response = await trpcClient.gocardless.institutions.list.query();
+      const accessToken = await this.getAccessToken();
+      const response = await trpcClient.gocardless.institutions.list.query({ 
+        accessToken,
+        country: 'GB' 
+      });
       return this.transformInstitutions(response);
     } catch (error) {
       console.error('Failed to fetch institutions:', error);
@@ -26,7 +52,9 @@ export class GoCardlessApiRepository implements GoCardlessRepository {
    */
   async getInstitutionsByCountry(countryCode: string): Promise<Institution[]> {
     try {
+      const accessToken = await this.getAccessToken();
       const response = await trpcClient.gocardless.institutions.byCountry.query({ 
+        accessToken,
         country: countryCode.toUpperCase() 
       });
       return this.transformInstitutions(response);
@@ -66,7 +94,9 @@ export class GoCardlessApiRepository implements GoCardlessRepository {
     access_valid_for_days: number;
   }> {
     try {
+      const accessToken = await this.getAccessToken();
       const response = await trpcClient.gocardless.agreements.create.mutate({
+        accessToken,
         institutionId,
         maxHistoricalDays: 90,
         accessValidForDays: 90,
@@ -85,7 +115,11 @@ export class GoCardlessApiRepository implements GoCardlessRepository {
    */
   async getAgreement(agreementId: string): Promise<any> {
     try {
-      return await trpcClient.gocardless.agreements.get.query({ agreementId });
+      const accessToken = await this.getAccessToken();
+      return await trpcClient.gocardless.agreements.get.query({ 
+        accessToken,
+        agreementId 
+      });
     } catch (error) {
       console.error('Failed to fetch agreement:', error);
       throw new Error('Failed to fetch agreement details');
@@ -97,7 +131,11 @@ export class GoCardlessApiRepository implements GoCardlessRepository {
    */
   async deleteAgreement(agreementId: string): Promise<void> {
     try {
-      await trpcClient.gocardless.agreements.delete.mutate({ agreementId });
+      const accessToken = await this.getAccessToken();
+      await trpcClient.gocardless.agreements.delete.mutate({ 
+        accessToken,
+        agreementId 
+      });
     } catch (error) {
       console.error('Failed to delete agreement:', error);
       throw new Error('Failed to delete agreement');
@@ -120,10 +158,13 @@ export class GoCardlessApiRepository implements GoCardlessRepository {
     accounts: string[];
   }> {
     try {
+      const accessToken = await this.getAccessToken();
       const response = await trpcClient.gocardless.requisitions.create.mutate({
+        accessToken,
         institutionId: params.institutionId,
-        agreementId: params.agreementId,
         redirectUrl: params.redirectUrl,
+        reference: `user-${Date.now()}`,
+        agreementId: params.agreementId,
         userLanguage: 'EN',
       });
       
@@ -145,7 +186,11 @@ export class GoCardlessApiRepository implements GoCardlessRepository {
     accounts: string[];
   }> {
     try {
-      return await trpcClient.gocardless.requisitions.get.query({ requisitionId });
+      const accessToken = await this.getAccessToken();
+      return await trpcClient.gocardless.requisitions.get.query({ 
+        accessToken,
+        requisitionId 
+      });
     } catch (error) {
       console.error('Failed to fetch requisition:', error);
       throw new Error('Failed to fetch connection status');
@@ -157,7 +202,11 @@ export class GoCardlessApiRepository implements GoCardlessRepository {
    */
   async deleteRequisition(requisitionId: string): Promise<void> {
     try {
-      await trpcClient.gocardless.requisitions.delete.mutate({ requisitionId });
+      const accessToken = await this.getAccessToken();
+      await trpcClient.gocardless.requisitions.delete.mutate({ 
+        accessToken,
+        requisitionId 
+      });
     } catch (error) {
       console.error('Failed to delete requisition:', error);
       throw new Error('Failed to delete connection');
@@ -169,7 +218,11 @@ export class GoCardlessApiRepository implements GoCardlessRepository {
    */
   async getAccountDetails(accountId: string): Promise<any> {
     try {
-      return await trpcClient.gocardless.accounts.details.query({ accountId });
+      const accessToken = await this.getAccessToken();
+      return await trpcClient.gocardless.accounts.details.query({ 
+        accessToken,
+        accountId 
+      });
     } catch (error) {
       console.error('Failed to fetch account details:', error);
       throw new Error('Failed to fetch account information');
@@ -181,7 +234,11 @@ export class GoCardlessApiRepository implements GoCardlessRepository {
    */
   async getAccountBalances(accountId: string): Promise<any> {
     try {
-      return await trpcClient.gocardless.accounts.balances.query({ accountId });
+      const accessToken = await this.getAccessToken();
+      return await trpcClient.gocardless.accounts.balances.query({ 
+        accessToken,
+        accountId 
+      });
     } catch (error) {
       console.error('Failed to fetch account balances:', error);
       throw new Error('Failed to fetch account balances');
@@ -193,7 +250,11 @@ export class GoCardlessApiRepository implements GoCardlessRepository {
    */
   async getAccountTransactions(accountId: string): Promise<any> {
     try {
-      return await trpcClient.gocardless.accounts.transactions.query({ accountId });
+      const accessToken = await this.getAccessToken();
+      return await trpcClient.gocardless.accounts.transactions.query({ 
+        accessToken,
+        accountId 
+      });
     } catch (error) {
       console.error('Failed to fetch account transactions:', error);
       throw new Error('Failed to fetch transactions');

@@ -127,12 +127,14 @@ function generateCounterpartyId(transaction: any): string {
   const debtorName = transaction.debtorName;
   const creditorAccount = transaction.creditorAccount?.iban;
   const debtorAccount = transaction.debtorAccount?.iban;
-  
+
   const name = creditorName || debtorName || "Unknown";
   const account = creditorAccount || debtorAccount || "";
-  
-  // Create a simple hash-like ID
-  return btoa(`${name}-${account}`).replace(/[^a-zA-Z0-9]/g, "").substring(0, 16);
+
+  // Create a simple hash-like ID (Node-safe replacement for btoa)
+  const base = `${name}-${account}`;
+  const encoded = Buffer.from(base, "utf-8").toString("base64");
+  return encoded.replace(/[^a-zA-Z0-9]/g, "").substring(0, 16);
 }
 
 function getCounterpartyName(transaction: any, isOutgoing: boolean): string {

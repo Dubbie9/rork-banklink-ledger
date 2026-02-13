@@ -30,13 +30,23 @@ export function useBankConnection() {
     try {
       const accessToken = await getValidAccessToken();
       
-      // Create requisition
+      // Create end-user agreement first
+      const agreement = await trpcClient.gocardless.agreements.create.mutate({
+        accessToken,
+        institutionId,
+        maxHistoricalDays: 90,
+        accessValidForDays: 30,
+        accessScope: ["balances", "details", "transactions"],
+      });
+
+      // Create requisition referencing the agreement
       const requisition = await trpcClient.gocardless.requisitions.create.mutate({
         accessToken,
         institutionId,
         redirectUrl: "banklink://bank-connected", // Deep link back to app
         reference: `${user.uid}-${Date.now()}`, // Unique reference
         userLanguage: "EN",
+        agreementId: agreement.id,
       });
       
       setState({ 

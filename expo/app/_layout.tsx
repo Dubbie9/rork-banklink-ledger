@@ -5,7 +5,7 @@ import * as SplashScreen from "expo-splash-screen";
 import { useEffect, useState } from "react";
 import { Platform } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
-
+import { ErrorBoundary } from "./error-boundary";
 import { AuthProvider } from "@/context/auth-context";
 import { StatusBar } from "expo-status-bar";
 import { ThemeProvider, useTheme } from "@/context/theme-context";
@@ -44,7 +44,7 @@ export default function RootLayout() {
   }
 
   return (
-    
+    <ErrorBoundary>
       <GestureHandlerRootView style={{ flex: 1 }}>
         <trpc.Provider client={trpcClient} queryClient={queryClient}>
           <QueryClientProvider client={queryClient}>
@@ -56,7 +56,7 @@ export default function RootLayout() {
           </QueryClientProvider>
         </trpc.Provider>
       </GestureHandlerRootView>
-    
+    </ErrorBoundary>
   );
 }
 
